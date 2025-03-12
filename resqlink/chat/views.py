@@ -5,6 +5,7 @@ from .models import Conversation, Message
 from django.utils import timezone
 from django.db.models import Q
 from django.http import HttpResponseForbidden
+from django.http import JsonResponse
 
 User = get_user_model()
 
@@ -93,3 +94,30 @@ def conversation_list(request):
     ).order_by('-created_at')
 
     return render(request, 'chat/conversation_list.html', {'conversations': conversations})
+
+
+@login_required
+def user_autocomplete(request):
+    """
+    Return a JSON list of matching usernames based on ?term= typed input.
+    """
+    term = request.GET.get('term', '')
+    max_results = 5  # limit how many suggestions we return
+
+    if term:
+        # exclude the current user from suggestions
+        users = (User.objects.filter(username__icontains=term)
+                 .exclude(pk=request.user.pk)
+                 .order_by('username')[:max_results])
+    else:
+        users = []
+
+    # Build a list of dicts like [{"id": 3, "username": "Alice"}, ...]
+    results = []
+    for u in users:
+        results.append({
+            'id': u.id,
+            'username': u.username
+        })
+
+    return JsonResponse(results, safe=False)
