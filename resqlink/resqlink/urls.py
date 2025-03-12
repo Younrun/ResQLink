@@ -24,4 +24,5 @@ def root_redirect(request):
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('accounts/',include('accounts.urls')),
+    path('chat/', include('chat.urls')),
 ]

@@ -1,0 +1,23 @@
+<!-- chat/templates/chat/conversation_list.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Conversations</title>
+</head>
+<body>
+  <h1>My Conversations</h1>
+  <a href="{% url 'user_search' %}">Start new conversation</a>
+  <ul>
+    {% for convo in conversations %}
+      <li>
+        {% if request.user == convo.participant1 %}
+          Conversation with {{ convo.participant2.username }}
+        {% else %}
+          Conversation with {{ convo.participant1.username }}
+        {% endif %}
+        <a href="{% url 'conversation_detail' convo.id %}">View</a>
+      </li>
+    {% endfor %}
+  </ul>
+</body>
+</html>

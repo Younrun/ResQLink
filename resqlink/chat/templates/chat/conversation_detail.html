@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Conversation</title>
+</head>
+<body>
+  <h1>Conversation with {{ other_user.username }}</h1>
+
+  <div style="border:1px solid #ccc; padding:10px; width:400px; height:300px; overflow-y:scroll;">
+    {% for msg in messages %}
+      <div style="margin-bottom:10px;">
+        <strong>{{ msg.sender.username }}:</strong> {{ msg.content }}
+        <br>
+        <small>{{ msg.timestamp }}</small>
+      </div>
+    {% endfor %}
+  </div>
+
+  <form method="POST" action="">
+    {% csrf_token %}
+    <input type="text" name="content" placeholder="Type your message..." style="width:300px;">
+    <button type="submit">Send</button>
+  </form>
+  <p><a href="{% url 'conversation_list' %}">Back to Conversations</a></p>
+</body>
+</html>

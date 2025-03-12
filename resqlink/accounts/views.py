@@ -70,6 +70,10 @@ def login_user(request):
         # Redirect to some "dashboard" or "home" after successful login
         if (user.user_type == "hospital") :
             return render(request, 'accounts/hostpital.html')
+        elif (user.user_type == "normal") :
+            return render(request, 'accounts/home.html')
+        elif (user.user_type == "paid user") :
+            return render(request, 'accounts/home.html')
         
     else:
         # If authentication fails, show an error
