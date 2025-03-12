@@ -1,0 +1,46 @@
+<!-- accounts/templates/accounts/register.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Register</title>
+</head>
+<body>
+  <h1>User Registration</h1>
+  {% if errors %}
+    <div style="color:red;">
+      <ul>
+        {% for field, msgs in errors.items %}
+          <li><strong>{{ field }}:</strong> {{ msgs.0 }}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  {% endif %}
+
+  <form method="POST" action="">
+    {% csrf_token %}
+    <p>
+      <label>Username:</label>
+      <input type="text" name="username" />
+    </p>
+    <p>
+      <label>Email:</label>
+      <input type="email" name="email" />
+    </p>
+    <p>
+      <label>Password:</label>
+      <input type="password" name="password" />
+    </p>
+    <p>
+      <label>User Type:</label>
+      <select name="user_type">
+        <option value="normal">Normal User</option>
+        <option value="paid">Paid User</option>
+        <option value="hospital">Hospital</option>
+      </select>
+    </p>
+    <button type="submit">Register</button>
+  </form>
+
+  <p>Already have an account? <a href="{% url 'login' %}">Log in here</a>.</p>
+</body>
+</html>
