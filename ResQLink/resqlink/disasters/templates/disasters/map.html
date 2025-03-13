@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Disaster Map</title>
+    
+    <!-- Leaflet CSS & JS (for map rendering) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <!-- jQuery for AJAX requests -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <style>
+        #map {
+            height: 600px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Real-Time Disaster Map</h2>
+    <div id="map"></div>
+
+    <script>
+        var map = L.map('map').setView([20, 0], 2);  // Center the map
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        var markers = {};  // Store markers to prevent duplicates
+
+        function fetchDisasters() {
+            $.getJSON("/api/reports/", function(data) {
+                data.forEach(report => {
+                    let key = `${report.latitude},${report.longitude}`;
+
+                    // If marker doesn't exist, add it
+                    if (!markers[key]) {
+                        var color = report.severity === "High" || report.severity === "Critical" ? "red" : "blue";
+                        
+                        var marker = L.marker([report.latitude, report.longitude], {
+                            icon: L.divIcon({ className: 'leaflet-div-icon', html: `<span style="color:${color}; font-size:20px;">⬤</span>` })
+                        }).addTo(map).bindPopup(
+                            `<strong>${report.disaster_type} (${report.severity})</strong><br>${report.description}`
+                        );
+
+                        markers[key] = marker;  // Store marker to avoid duplicates
+                    }
+                });
+            });
+        }
+
+        // Fetch disasters initially and every 10 seconds
+        fetchDisasters();
+        setInterval(fetchDisasters, 10000);
+    </script>
+
+</body>
+</html>
