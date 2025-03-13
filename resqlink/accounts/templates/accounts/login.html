@@ -1,27 +1,82 @@
-<!-- accounts/templates/accounts/login.html -->
+{% load static %}
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Login</title>
+    <title>ResQLink: Disaster Response & Crisis Management</title>
+    <!-- Link to your CSS file in the static folder -->
+    <link rel="stylesheet" href="{% static 'accounts/style.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@200;400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>Login</h1>
-  {% if error_msg %}
-    <div style="color:red;">{{ error_msg }}</div>
-  {% endif %}
-  <form method="POST" action="">
-    {% csrf_token %}
-    <p>
-      <label>Username:</label>
-      <input type="text" name="username" />
-    </p>
-    <p>
-      <label>Password:</label>
-      <input type="password" name="password" />
-    </p>
-    <button type="submit">Login</button>
-  </form>
+   <div id="grad">
+      <div class="wrapper">
 
-  <p>Don't have an account? <a href="{% url 'register' %}">Register here</a>.</p>
+         <!-- Container to hold the checkbox toggle and the flipping card -->
+         <div class="card-switch">
+           
+           <!-- 1) The flip toggle (checkbox). Clicking the label below will check/uncheck it -->
+           <input type="checkbox" id="flipToggle" class="toggle">
+           
+           <!-- 2) The label for the checkbox. Clicking it flips the card via CSS. -->
+           <label for="flipToggle" class="switch">
+             <span class="slider"></span>
+             <span class="card-side"></span>
+           </label>
+
+           <!-- 3) The flipping container is a sibling of .toggle -->
+           <div class="flip-card__inner">
+               
+               <!-- FRONT SIDE: LOGIN -->
+               <div class="flip-card__front">
+                  <div class="title">Log in</div>
+                  {% if login_error %}
+                     <p style="color:red;">{{ login_error }}</p>
+                  {% endif %}
+                  <form class="flip-card__form" method="POST" action="">
+                     {% csrf_token %}
+                     <input type="hidden" name="form_type" value="login">
+
+                     <input class="flip-card__input" name="username" placeholder="username" type="text">
+                     <input class="flip-card__input" name="password" placeholder="Password" type="password">
+                     <button class="flip-card__btn" type="submit">Send</button>
+                  </form>
+               </div>
+
+               <!-- BACK SIDE: SIGN UP -->
+               <div class="flip-card__back">
+                  <div class="title">Sign up</div>
+                  {% if reg_success %}
+                     <p style="color:green;">{{ reg_success }}</p>
+                  {% endif %}
+                  {% if reg_errors %}
+                     <div style="color:red;">
+                        {% for field, errorlist in reg_errors.items %}
+                          <p><strong>{{ field }}:</strong> {{ errorlist.0 }}</p>
+                        {% endfor %}
+                     </div>
+                  {% endif %}
+                  <form class="flip-card__form" method="POST" action="">
+                     {% csrf_token %}
+                     <input type="hidden" name="form_type" value="register">
+
+                     <input class="flip-card__input" name="username" placeholder="username" type="text">
+                     <input class="flip-card__input" name="email" placeholder="Email" type="email">
+                     <input class="flip-card__input" name="password" placeholder="Password" type="password">
+                     <select name="user_type" class="flip-card__input">
+                        <option value="normal">Normal</option>
+                        <option value="paid">Paid</option>
+                        <option value="hospital">Hospital</option>
+                     </select>
+                     <button class="flip-card__btn" type="submit">Confirm!</button>
+                  </form>
+               </div>
+
+           </div><!-- .flip-card__inner -->
+         </div><!-- .card-switch -->
+
+      </div><!-- .wrapper -->
+   </div><!-- #grad -->
 </body>
 </html>

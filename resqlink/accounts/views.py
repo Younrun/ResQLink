@@ -14,10 +14,10 @@ from .permissions import IsHospitalUser
 # If using a custom user model with a user_type field:
 CustomUser = get_user_model()
 
-
+#this methode is not currently being used
 @api_view(['GET', 'POST'])
-@permission_classes([AllowAny])
-def register_user(request):
+@permission_classes([AllowAny]) 
+def register_user(request): 
     """
     GET  -> Render the registration page (accounts/register.html).
     POST -> Process the form submission, create a user (via DRF serializer).
@@ -52,33 +52,56 @@ from django.contrib.auth import authenticate, login, logout
 
 @api_view(['GET','POST'])
 @permission_classes([AllowAny])
-def login_user(request):
+def login_register_view(request):
     """
-    GET  -> Render the login page (accounts/login.html).
-    POST -> Process login form submission, log in the user if valid.
+    A single view for both login (front side of card) and register (back side).
     """
     if request.method == 'GET':
+        # Render our flip card template
         return render(request, 'accounts/login.html')
 
     # request.method == 'POST'
-    username = request.POST.get('username')
-    password = request.POST.get('password')
+    form_type = request.POST.get('form_type')  # "login" or "register"
 
-    user = authenticate(request, username=username, password=password)
-    if user:
-        login(request, user)
-        # Redirect to some "dashboard" or "home" after successful login
-        if (user.user_type == "hospital") :
-            return render(request, 'accounts/hostpital.html')
-        elif (user.user_type == "normal") :
-            return render(request, 'accounts/home.html')
-        elif (user.user_type == "paid user") :
-            return render(request, 'accounts/home.html')
-        
-    else:
-        # If authentication fails, show an error
-        error_msg = "Invalid credentials"
-        return render(request, 'accounts/login.html', {'error_msg': error_msg})
+    if form_type == 'login':
+        username = request.POST.get('username')         # or 'login_username'
+        password = request.POST.get('password')      # or 'login_password'
+        user = authenticate(request, username=username, password=password)
+        if user:
+            login(request, user)
+            return render(request, 'accounts/home.html')  # or wherever you want
+        else:
+            # Return the same template with an error message
+            return render(request, 'accounts/login.html', {
+                'login_error': "Invalid login credentials. Please try again."
+            })
+
+    elif form_type == 'register':
+        # Gather data for the RegistrationSerializer
+        data = {
+            'username': request.POST.get('username'),    # Or separate field if you prefer
+            'email': request.POST.get('email'),       # same as above or a different field
+            'password': request.POST.get('password'),
+            'user_type': request.POST.get('user_type', 'normal'),  # e.g. "hospital", "paid"
+        }
+        serializer = RegistrationSerializer(data=data)
+        if serializer.is_valid():
+            user = serializer.save()
+            # Optionally, auto-login:
+            # login(request, user)
+            return render(request, 'accounts/login.html', {
+                'reg_success': "Registration successful! Please login."
+            })
+        else:
+            print(serializer.errors)
+            return render(request, 'accounts/login.html', {
+                'reg_errors': serializer.errors
+                 
+            })
+
+    # If form_type is missing or something else
+    print("something went wrong")
+    return render(request, 'accounts/login.html')
 
 
 @api_view(['POST'])
