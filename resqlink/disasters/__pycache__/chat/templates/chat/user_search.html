@@ -1,0 +1,120 @@
+<!-- chat/templates/chat/user_search.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Search for a User</title>
+  <style>
+    /* Basic style for suggestions dropdown */
+    .autocomplete-suggestions {
+      border: 1px solid #ccc;
+      max-width: 200px;
+      background: #fff;
+      position: absolute;
+    }
+    .autocomplete-suggestion {
+      padding: 5px;
+      cursor: pointer;
+    }
+    .autocomplete-suggestion:hover {
+      background: #eee;
+    }
+  </style>
+</head>
+<body>
+  <h1>Search for a User</h1>
+  <form method="GET" action="">
+    <!-- Our search input -->
+    <input type="text" name="q" placeholder="Username..." value="{{ query }}" id="search-input" autocomplete="off">
+    <button type="submit">Search</button>
+  </form>
+
+  <div id="suggestions" class="autocomplete-suggestions" style="display:none;"></div>
+
+  {% if results %}
+    <h2>Results for "{{ query }}":</h2>
+    <ul>
+      {% for user in results %}
+        <li>
+          {{ user.username }}
+          <a href="{% url 'start_conversation' user.id %}">Chat</a>
+        </li>
+      {% endfor %}
+    </ul>
+  {% elif query %}
+    <p>No matching users found.</p>
+  {% endif %}
+
+  <script>
+    const searchInput = document.getElementById('search-input');
+    const suggestionsBox = document.getElementById('suggestions');
+
+    let timeoutID = null;
+
+    searchInput.addEventListener('input', function() {
+      const term = this.value.trim();
+
+      // Hide suggestions if empty
+      if (!term) {
+        suggestionsBox.style.display = 'none';
+        return;
+      }
+
+      // We can do a small debounce so we don't spam the server on every keystroke
+      if (timeoutID) clearTimeout(timeoutID);
+      timeoutID = setTimeout(() => fetchSuggestions(term), 300);
+    });
+
+    function fetchSuggestions(term) {
+      // Build the URL, e.g. /chat/autocomplete/?term=theTypedText
+      const url = `/chat/autocomplete/?term=${encodeURIComponent(term)}`;
+
+      fetch(url, {method: 'GET'})
+        .then(response => response.json())
+        .then(data => {
+          // data is an array of {id, username}
+          renderSuggestions(data);
+        })
+        .catch(err => {
+          console.error('Error fetching suggestions:', err);
+        });
+    }
+
+    function renderSuggestions(suggestions) {
+      if (suggestions.length === 0) {
+        suggestionsBox.style.display = 'none';
+        return;
+      }
+
+      // Build HTML for suggestions
+      let html = '';
+      suggestions.forEach(item => {
+        html += `<div class="autocomplete-suggestion" data-username="${item.username}">
+                  ${item.username}
+                 </div>`;
+      });
+
+      suggestionsBox.innerHTML = html;
+      suggestionsBox.style.display = 'block';
+
+      // Add click handlers
+      const suggestionElems = suggestionsBox.querySelectorAll('.autocomplete-suggestion');
+      suggestionElems.forEach(elem => {
+        elem.addEventListener('click', function() {
+          const selectedUsername = this.getAttribute('data-username');
+          // Fill the input with the chosen username
+          searchInput.value = selectedUsername;
+          // Hide suggestions
+          suggestionsBox.style.display = 'none';
+        });
+      });
+    }
+
+    // Hide suggestions if clicked outside
+    document.addEventListener('click', function(e) {
+      if (!suggestionsBox.contains(e.target) && e.target !== searchInput) {
+        suggestionsBox.style.display = 'none';
+      }
+    });
+  </script>
+</body>
+</html>
