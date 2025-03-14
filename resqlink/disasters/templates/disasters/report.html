@@ -245,36 +245,48 @@ label {
 
 <h2>Report a Disaster</h2>
 
-<form id="disasterForm">
-    Disaster Type: <select id="disaster_type">
+<form id="disasterForm" method="POST">
+    {% csrf_token %}  <!-- CSRF Token is required -->
+
+    Disaster Type:
+    <select name="disaster_type">
         <option value="Flood">Flood</option>
         <option value="Earthquake">Earthquake</option>
         <option value="Fire">Fire</option>
         <option value="Hurricane">Hurricane</option>
     </select><br>
 
-    Severity: <select id="severity">
+    Severity:
+    <select name="severity">
         <option value="Low">Low</option>
         <option value="Moderate">Moderate</option>
         <option value="High">High</option>
         <option value="Critical">Critical</option>
     </select><br>
 
-    Description: <textarea id="description"></textarea><br>
+    Description:
+    <textarea name="description"></textarea><br>
 
     <h3>Click the Map to Select a Location</h3>
     <div id="map" style="height: 400px;"></div>
 
-    Latitude: <input type="text" id="latitude" readonly><br>
-    Longitude: <input type="text" id="longitude" readonly><br>
+    Latitude:
+    <input type="text" id="latitude" name="latitude" readonly pattern="-?\d{1,4}(\.\d{1,6})?" required><br>
+    
+    Longitude:
+    <input type="text" id="longitude" name="longitude" readonly pattern="-?\d{1,4}(\.\d{1,6})?" required><br>
+    
+    
 
     <button type="submit">Report</button>
 </form>
 
+
+
 <script>
-    var map = L.map('map').setView([20, 0], 2);
+    var map = L.map('map').setView([20, 0], 2);  // Initialize map
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-    
+
     var marker;
     map.on('click', function(e) {
         if (marker) {
@@ -286,30 +298,33 @@ label {
     });
 
     $("#disasterForm").submit(function(event) {
-    event.preventDefault();
-    $.ajax({
-        url: "/api/disaster-reports/",
-        type: "POST",
-        contentType: "application/json",
-        data: JSON.stringify({
-            "disaster_type": $("#disaster_type").val(),
-            "severity": $("#severity").val(),
-            "description": $("#description").val(),
-            "latitude": $("#latitude").val(),
-            "longitude": $("#longitude").val()
-        }),
-        success: function(response) {
-            alert("Disaster reported successfully!");
-            location.reload();  // Refresh page to see new markers
-        },
-        error: function(xhr) {
-            console.error("Error saving disaster:", xhr.responseText);
-            alert("Error reporting disaster. Check console for details.");
-        }
-    });
-});
+        event.preventDefault();
 
+        var formData = new FormData(this);  // Capture form data
+
+        // Debugging: Log form data before submission
+        for (var pair of formData.entries()) {
+            console.log("📝", pair[0] + ": " + pair[1]);
+        }
+
+        $.ajax({
+            url: "{% url 'report_disaster' %}",
+            type: "POST",
+            data: formData,
+            processData: false,  // Required for file uploads
+            contentType: false,  // Let browser set content type automatically
+            success: function(response) {
+                alert("Disaster reported successfully!");
+                window.location.href = "{% url 'disaster_map' %}";  // Redirect to map
+            },
+            error: function(xhr) {
+                console.error("Error saving disaster:", xhr.responseText);
+                alert("Error reporting disaster.");
+            }
+        });
+    });
 </script>
+
 
 </body>
 </html>

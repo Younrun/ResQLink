@@ -28,8 +28,8 @@ class DisasterReport(models.Model):
     disaster_type = models.CharField(max_length=30, choices=DISASTER_TYPES)
     severity = models.CharField(max_length=10, choices=SEVERITY_LEVELS, default='Moderate')
     description = models.TextField()
-    latitude = models.DecimalField(max_digits=9, decimal_places=6)
-    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    latitude = models.DecimalField(max_digits=10, decimal_places=6)
+    longitude = models.DecimalField(max_digits=10, decimal_places=6)
     image = models.ImageField(upload_to='disaster_images/', blank=True, null=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 

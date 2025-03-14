@@ -1,68 +1,51 @@
 from django.shortcuts import render, redirect
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
 from .models import DisasterReport
 from .forms import DisasterReportForm
 import folium
-from django.http import JsonResponse
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from .serializers import DisasterReportSerializer
-from django.views.decorators.csrf import csrf_exempt
-from django.utils.decorators import method_decorator
 
-
+@csrf_exempt
 def report_disaster(request):
-    """Allows users to submit disaster reports."""
+    """Handles disaster report submissions via standard form submission without CSRF."""
     if request.method == "POST":
+        print(" Received POST Data:", request.POST)  # Debugging output
+        print(" Received FILES Data:", request.FILES)  # Debugging output
+        
         form = DisasterReportForm(request.POST, request.FILES)
+
         if form.is_valid():
-            form.save()
-            return redirect('disaster_map')
+            saved_report = form.save()
+            print(" Disaster report saved:", saved_report)  # Debugging confirmation
+            return JsonResponse({"success": True, "message": "Disaster reported successfully!"}, status=201)
         else:
-            print("Form is not valid:", form.errors)
+            print(" Form Errors:", form.errors)  # Debugging output
+            return JsonResponse({"success": False, "errors": form.errors}, status=400)
+
     else:
         form = DisasterReportForm()
     
     return render(request, "disasters/report.html", {"form": form})
 
-
 def disaster_map(request):
-    """Displays a real-time crisis map with reported disasters."""
+    """Displays real-time disaster reports on a map."""
     reports = DisasterReport.objects.all()
-    
+
     # Initialize Folium map (Default Center Location)
     m = folium.Map(location=[20, 0], zoom_start=2)
 
-    # Add disaster reports as markers on the map
+    # Add markers for disasters
     for report in reports:
         folium.Marker(
             location=[report.latitude, report.longitude],
             popup=f"{report.disaster_type} ({report.severity}): {report.description}",
             icon=folium.Icon(color="red" if report.severity in ["High", "Critical"] else "blue")
         ).add_to(m)
-    
-    # Render the map
+
     map_html = m._repr_html_()
     return render(request, "disasters/map.html", {"map_html": map_html})
 
-
-@method_decorator(csrf_exempt, name='dispatch')
-class DisasterReportAPI(APIView):
-    """API endpoint to get and create disaster reports."""
-    def get(self, request, format=None):
-        reports = DisasterReport.objects.all()
-        serializer = DisasterReportSerializer(reports, many=True)
-        return Response(serializer.data)
-
-    def post(self, request, format=None):
-        serializer = DisasterReportSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 def get_disaster_reports(request):
-    """Returns disaster reports as JSON data for real-time updates."""
-    reports = DisasterReport.objects.values("disaster_type", "severity", "description", "latitude", "longitude", "timestamp")
-    return JsonResponse(list(reports), safe=False)
+    """Returns disaster reports as JSON for real-time updates."""
+    reports = list(DisasterReport.objects.values("disaster_type", "severity", "description", "latitude", "longitude", "timestamp"))
+    return JsonResponse(reports, safe=False)

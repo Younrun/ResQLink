@@ -13,15 +13,40 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            text-align: center;
+        }
+
+        h2 {
+            color: #d63031;
+            font-size: 2rem;
+            margin: 20px 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
         #map {
             height: 600px;
-            width: 100%;
+            width: 95%;
+            margin: 20px auto;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            border: 2px solid #dfe6e9;
+        }
+
+        .leaflet-popup-content {
+            font-size: 14px;
+            font-weight: bold;
+            color: #2d3436;
         }
     </style>
 </head>
 <body>
 
-    <h2>Real-Time Disaster Map</h2>
+    <h2>🌍 Live Disaster Reports</h2>
     <div id="map"></div>
 
     <script>
@@ -33,21 +58,28 @@
         var markers = {};  // Store markers to prevent duplicates
 
         function fetchDisasters() {
-            $.getJSON("/api/reports/", function(data) {
+            $.getJSON("{% url 'get_disaster_reports' %}", function(data) {
                 data.forEach(report => {
                     let key = `${report.latitude},${report.longitude}`;
 
-                    // If marker doesn't exist, add it
+                    // Check if marker already exists to prevent duplicates
                     if (!markers[key]) {
-                        var color = report.severity === "High" || report.severity === "Critical" ? "red" : "blue";
-                        
+                        var color = report.severity === "Critical" ? "red" : 
+                                    report.severity === "High" ? "orange" : 
+                                    report.severity === "Moderate" ? "blue" : "green";
+
                         var marker = L.marker([report.latitude, report.longitude], {
-                            icon: L.divIcon({ className: 'leaflet-div-icon', html: `<span style="color:${color}; font-size:20px;">⬤</span>` })
+                            icon: L.divIcon({
+                                className: 'leaflet-div-icon',
+                                html: `<span style="color:${color}; font-size:20px;">⬤</span>`
+                            })
                         }).addTo(map).bindPopup(
-                            `<strong>${report.disaster_type} (${report.severity})</strong><br>${report.description}`
+                            `<strong>${report.disaster_type} (${report.severity})</strong><br>
+                             <em>Reported by: ${report.user}</em><br>
+                             <p>${report.description}</p>`
                         );
 
-                        markers[key] = marker;  // Store marker to avoid duplicates
+                        markers[key] = marker;
                     }
                 });
             });

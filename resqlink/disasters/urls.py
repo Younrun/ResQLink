@@ -1,9 +1,8 @@
 from django.urls import path
-from .views import report_disaster, disaster_map
-from .api_views import DisasterReportAPI
+from .views import report_disaster, disaster_map, get_disaster_reports
 
 urlpatterns = [
     path('report/', report_disaster, name='report_disaster'),
     path('map/', disaster_map, name='disaster_map'),
-    path('api/disaster-reports/', DisasterReportAPI.as_view(), name='api_disaster_reports'),
+    path('get-disasters/', get_disaster_reports, name='get_disaster_reports'),  # Replaces API
 ]
